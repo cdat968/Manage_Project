@@ -24,3 +24,9 @@ Kế hoạch: `docs/superpowers/plans/`.
 ## Bảo mật cô lập
 - `middleware.ts` chặn mọi route trừ `/login`, `/v/*`, asset tĩnh.
 - Trang `/v/[token]` chỉ đọc DB qua server bằng admin client, trả đúng 1 page.
+
+## Next.js version
+- Bản scaffold là **Next.js 16** (có breaking changes so với 15). Trước khi viết code đụng
+  API mới (middleware/proxy, async cookies/headers/params), đọc `node_modules/next/dist/docs/`.
+
+@AGENTS.md
