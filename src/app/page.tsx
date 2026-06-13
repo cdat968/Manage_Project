@@ -1,30 +1,24 @@
-import { createClient } from "@/lib/supabase/server";
+import { listProjects } from "@/lib/projects/queries";
+import { ProjectCard } from "@/components/project-card";
+import { ProjectCreateDialog } from "@/components/project-create-dialog";
 
 export default async function Dashboard() {
-  const supabase = await createClient();
-  const { data: projects } = await supabase
-    .from("project")
-    .select("id,name")
-    .order("created_at");
+  const projects = await listProjects();
 
   return (
     <main className="mx-auto max-w-5xl p-8">
-      <h1 className="text-2xl font-bold text-navy">Dự án</h1>
-      {!projects || projects.length === 0 ? (
-        <p className="mt-6 text-muted-foreground">
-          Chưa có dự án nào. (CRUD sẽ thêm ở Plan 2.)
-        </p>
+      <div className="flex items-center justify-between">
+        <h1 className="text-2xl font-bold text-navy">Dự án</h1>
+        <ProjectCreateDialog />
+      </div>
+      {projects.length === 0 ? (
+        <p className="mt-6 text-muted-foreground">Chưa có dự án nào. Bấm “Dự án mới”.</p>
       ) : (
-        <ul className="mt-6 space-y-2">
+        <div className="mt-6 grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {projects.map((p) => (
-            <li
-              key={p.id}
-              className="rounded-lg border border-line bg-white px-4 py-3"
-            >
-              {p.name}
-            </li>
+            <ProjectCard key={p.id} project={p} />
           ))}
-        </ul>
+        </div>
       )}
     </main>
   );
