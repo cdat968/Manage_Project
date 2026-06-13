@@ -6,7 +6,9 @@
 
 **Architecture:** Một app Next.js (App Router, TypeScript) chạy trong container Docker (deps nằm trong named volume, không cài lên máy). Supabase cloud free-tier làm Postgres + Auth + Storage. Middleware chặn mọi route trừ `/login` và `/v/[token]`. Logic thuần (hash mật khẩu, sinh token) tách thành module test được bằng Vitest (TDD).
 
-**Tech Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · `@supabase/supabase-js` + `@supabase/ssr` · `pg` (migration runner) · `bcryptjs` · `nanoid` · Vitest + Testing Library · Docker + Docker Compose.
+**Tech Stack:** Next.js 15 (App Router) · TypeScript · Tailwind CSS v4 · **shadcn/ui** (component khu admin) · `@supabase/supabase-js` + `@supabase/ssr` · `pg` (migration runner) · `bcryptjs` · `nanoid` · Vitest + Testing Library · Docker + Docker Compose.
+
+**UI:** Khu admin dùng **shadcn/ui** (table/dialog/dropdown/badge…), khởi tạo trong Plan 1, `add` component theo nhu cầu ở các plan sau. Trang **report & viewer gửi ra ngoài** vẫn render theo design system tùy biến (navy/teal/gold + mermaid) để giống file mẫu. Guidance: skill `vercel:shadcn`, `vercel:nextjs`, `vercel:react-best-practices`.
 
 ---
 
@@ -54,9 +56,12 @@ Testing_WEB/
   vitest.setup.ts
   middleware.ts                  # cô lập route
   postcss.config.mjs
+  components.json                # cấu hình shadcn/ui
   src/
+    components/ui/               # component shadcn (add dần)
+    lib/utils.ts                 # cn() helper của shadcn
     app/
-      globals.css                # Tailwind v4 + design tokens (navy/teal/gold)
+      globals.css                # Tailwind v4 + shadcn base + design tokens (navy/teal/gold)
       layout.tsx
       page.tsx                   # dashboard rỗng (đã đăng nhập)
       login/page.tsx             # form đăng nhập owner
@@ -358,16 +363,25 @@ git commit -m "test: configure Vitest with sanity test"
 
 ---
 
-## Task 3: Tailwind design tokens (theme navy/teal/gold)
+## Task 3: shadcn/ui init + brand design tokens (navy/teal/gold)
 
 **Files:**
+- Create: `components.json`, `src/lib/utils.ts`
 - Modify: `src/app/globals.css`
 
-- [ ] **Step 1: Thêm design tokens vào `globals.css`** (giữ dòng `@import "tailwindcss";` ở đầu do scaffold tạo, thêm khối `@theme` bên dưới)
+> Guidance: dùng skill `vercel:shadcn` khi chạy task này để bám đúng quy trình hiện hành.
+
+- [ ] **Step 1: Khởi tạo shadcn/ui trong container**
+
+Run: `docker compose run --rm web npx --yes shadcn@latest init -d`
+- `-d` = nhận default (style mặc định, base color neutral, CSS variables).
+- Tạo `components.json`, `src/lib/utils.ts`, và viết lại `globals.css` theo cấu trúc shadcn (Tailwind v4: `@import "tailwindcss"`, `@theme inline`, các CSS var `--background`, `--foreground`, `--primary`…).
+- Nếu hỏi alias, giữ `@/components`, `@/lib/utils`.
+
+- [ ] **Step 2: Thêm brand tokens vào `globals.css`** (chèn THÊM khối `@theme` brand bên dưới phần shadcn tạo — không xoá var của shadcn)
 
 ```css
-@import "tailwindcss";
-
+/* === Brand tokens (TechNext report design system) === */
 @theme {
   --color-ink: #0f1f33;
   --color-muted: #5b6b7e;
@@ -376,27 +390,27 @@ git commit -m "test: configure Vitest with sanity test"
   --color-navy-deep: #0b2c4d;
   --color-teal: #0d9488;
   --color-gold: #c5a059;
-  --color-bg: #f6f8fb;
+  --color-brand-bg: #f6f8fb;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", Arial, sans-serif;
-}
-
-body {
-  background: var(--color-bg);
-  color: var(--color-ink);
-  font-family: var(--font-sans);
 }
 ```
 
-- [ ] **Step 2: Xác nhận build không lỗi**
+- [ ] **Step 3: Thêm component `button` để xác nhận shadcn hoạt động**
+
+Run: `docker compose run --rm web npx --yes shadcn@latest add button`
+Expected: tạo `src/components/ui/button.tsx`.
+
+- [ ] **Step 4: Xác nhận build không lỗi**
 
 Run: `docker compose run --rm web npm run build`
 Expected: build thành công (Compiled successfully).
 
-- [ ] **Step 3: Ghi CHANGELOG + commit**
+- [ ] **Step 5: Ghi CHANGELOG + commit**
 
+Thêm CHANGELOG: "Init shadcn/ui + brand design tokens (navy/teal/gold)."
 ```bash
 git add -A
-git commit -m "style: add navy/teal/gold design tokens (Tailwind v4)"
+git commit -m "feat: init shadcn/ui + brand design tokens"
 ```
 
 ---
