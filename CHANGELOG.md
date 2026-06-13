@@ -3,6 +3,15 @@
 Mọi thay đổi đáng kể của dự án được ghi tại đây. Định dạng theo Keep a Changelog.
 
 ## [Unreleased]
+## [Plan 3 — Free-form pages]
+
+### Added
+- availableLanguages helper (TDD).
+- Page queries + savePage action (cập nhật html_vi/html_en/title/published).
+- HtmlViewer: render HTML trong iframe sandbox (allow-scripts) + toggle VI/EN.
+- HtmlEditor: tab VI/EN, textarea HTML, live preview, nút Lưu + published.
+- Trang editor `/projects/[id]/report` & `/projects/[id]/guide`.
+
 ## [Plan 2 — Projects & Features]
 
 ### Added
