@@ -13,6 +13,7 @@ Mọi thay đổi đáng kể của dự án được ghi tại đây. Định d
 - shadcn/ui (Base UI) components: card/dialog/input/label/select/dropdown-menu/badge/sonner.
 
 ### Changed
+- Redesign khu admin: app shell sidebar navy + brand (route group `(app)`), dashboard/cards/page-tabs/feature/login polish theo brand navy/teal/gold (frontend-design + vercel:shadcn).
 - Dùng font `geist` self-hosted thay `next/font/google` (tránh lỗi fetch mạng khi build trong Docker).
 
 
