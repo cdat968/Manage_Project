@@ -3,6 +3,18 @@
 Mọi thay đổi đáng kể của dự án được ghi tại đây. Định dạng theo Keep a Changelog.
 
 ## [Unreleased]
+## [Plan 2 — Projects & Features]
+
+### Added
+- slugify + page-kinds/buildDefaultPages domain helpers (TDD).
+- Project CRUD: dashboard list, tạo project (tự sinh 5 trang), sửa/xoá (cascade).
+- Feature CRUD: thêm/sửa/xoá + trạng thái (badge màu) trong trang tổng quan project.
+- Trang `/projects/[id]`: thông tin + 5 tab trang (link sang trang con Plan 3–7) + danh sách feature.
+- shadcn/ui (Base UI) components: card/dialog/input/label/select/dropdown-menu/badge/sonner.
+
+### Changed
+- Dùng font `geist` self-hosted thay `next/font/google` (tránh lỗi fetch mạng khi build trong Docker).
+
 
 ### Added
 - Khởi tạo dự án: CLAUDE.md, CHANGELOG.md, .gitignore, .env.example (Plan 1 / Task 0).
