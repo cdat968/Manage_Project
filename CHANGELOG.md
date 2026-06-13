@@ -13,3 +13,4 @@ Mọi thay đổi đáng kể của dự án được ghi tại đây. Định d
 - Supabase clients browser/server/admin (Plan 1 / Task 6).
 - Đăng nhập owner (email/password) + `proxy.ts` (Next 16 middleware) cô lập route: chặn mọi route trừ /login, /v/* (Plan 1 / Task 7).
 - Dashboard rỗng + viewer stub `/v/[token]` (404 cho token lạ) (Plan 1 / Task 8).
+- Đưa `.next` vào named volume (tránh stale cache lẫn giữa máy & container).
