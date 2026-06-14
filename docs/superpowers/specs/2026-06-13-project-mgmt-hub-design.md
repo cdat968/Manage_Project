@@ -1,8 +1,24 @@
 # Project Management & Reporting Hub — Design
 
-**Date:** 2026-06-13
-**Status:** Approved (design phase)
+**Date:** 2026-06-13 · **Revised:** 2026-06-14
+**Status:** Approved (design phase) — Revision 2 (mô hình template + inline edit)
 **Author:** aidev3@technext.asia
+
+## Revision 2 (2026-06-14) — Tóm tắt thay đổi lớn
+
+Thay đổi mô hình nội dung sau khi làm rõ requirement:
+
+1. **Mọi trang đều SỬA ĐƯỢC trong app + lưu thành TEMPLATE tái dùng** cho project khác (trước đây chỉ một số trang sửa được).
+2. **Phân lại 2 họ trang:**
+   - **Họ "tài liệu" (free-form HTML):** chỉ **Report cho sếp**. Soạn HTML (VI/EN), render iframe → **bản in cuối cùng**. Lưu cả HTML thành *document template*.
+   - **Họ "có cấu trúc" (template-slot + dữ liệu + inline edit):** **Hướng dẫn, Test Cases, Bug Tickets, Nhật ký**. Render bằng React từ **dữ liệu record**, đặt trong **template/theme** giữ nguyên định dạng; **sửa inline tại chỗ (optimistic, 1 người)**, có nút **thêm/xoá record**.
+3. **Hướng "sinh trang tương tác" = Hướng ① (template có slot + data cấu trúc)**, KHÔNG parse HTML tùy ý, KHÔNG dùng LLM. Template = "bộ khung/định dạng" có vùng slot; record = dữ liệu đổ vào slot.
+4. **Thư viện template** (mới): lưu & chọn lại template cho từng trang ở project khác.
+5. **Realtime = optimistic inline (1 owner)** — sửa thấy ngay, lưu ngầm; KHÔNG cần live-sync nhiều thiết bị (giai đoạn này).
+
+**Ảnh hưởng tới plan đã làm:** Plan 3 (đang ở nhánh `feat/free-form-pages`) đã dựng editor free-form cho **cả Report và Hướng dẫn**. Theo revision này: **giữ phần Report**; **Hướng dẫn chuyển sang họ có-cấu-trúc** (sẽ làm lại trong plan structured). Plan 4/5/6 viết theo mô hình template-slot + inline edit.
+
+**Điểm còn để ngỏ (cần xác nhận khi review):** Hướng dẫn có cần song ngữ VI/EN không? Revision này mặc định **structured pages chỉ VI** ở v1 (Report vẫn song ngữ). Nếu cần Hướng dẫn song ngữ → mỗi block có thêm trường EN.
 
 ## 1. Mục tiêu
 
@@ -12,24 +28,28 @@ Hiện trạng cần thay thế: các report đang là **file HTML thủ công, 
 
 ## 2. Phạm vi — 5 loại trang / project
 
-| # | Trang | Loại nội dung | File mẫu tham chiếu |
-|---|-------|---------------|---------------------|
-| 1 | **Report cho sếp** | HTML tự do (song ngữ) | `HRM_ODOO_REPORT_VI.html` |
-| 2 | **Hướng dẫn sử dụng** | HTML tự do (song ngữ) | `Huong-dan-HR.html` |
-| 3 | **Test Cases** | Dữ liệu có cấu trúc — bảng sống | `Test-Cases-Cham-cong.html` |
-| 4 | **Bug Tickets** | Dữ liệu có cấu trúc — bảng sống | `bug_report_landingPage.html` |
-| 5 | **Nhật ký triển khai** | Dữ liệu có cấu trúc — timeline theo feature | *(mới)* |
+| # | Trang | Họ | Mô hình | Sửa | Template | File mẫu |
+|---|-------|-----|---------|-----|----------|----------|
+| 1 | **Report cho sếp** | Tài liệu | HTML tự do (VI/EN), iframe — bản in cuối | Editor HTML | Document template (lưu HTML) | `HRM_ODOO_REPORT_VI.html` |
+| 2 | **Hướng dẫn sử dụng** | Có cấu trúc | Block (title+body+ảnh+nhãn hệ thống) | Inline | Theme template | `Huong-dan-HR.html` |
+| 3 | **Test Cases** | Có cấu trúc | Record TC (schema cố định) | Inline + thêm/xoá record | Theme template | `Test-Cases-Cham-cong.html` |
+| 4 | **Bug Tickets** | Có cấu trúc | Record bug (schema cố định) | Inline + thêm/xoá record | Theme template | `bug_report_landingPage.html` |
+| 5 | **Nhật ký triển khai** | Có cấu trúc | Entry gom theo feature | Inline + thêm/xoá record | Theme template | *(mới)* |
 
-Style chuẩn (đẹp, in PDF tốt): theo `restaurant-workflow-bilingual.html` — font Inter, palette navy/teal/gold, card bo góc, mermaid, branding TechNext.
+- **Inline edit**: bấm thẳng vào field/section trên trang đã render để sửa tại chỗ; lưu **optimistic** (UI đổi ngay, ghi DB ngầm). Có nút **+ Thêm record/block**; record cũ giữ nguyên; định dạng giữ nguyên (mọi record vẽ bằng cùng "khuôn" của template).
+- Style chuẩn: theo `restaurant-workflow-bilingual.html` — font Inter, palette navy/teal/gold, card bo góc, mermaid, branding TechNext.
 
 ## 3. Quyết định chốt
 
 - **Kiến trúc (Phương án 1):** một app Next.js (App Router) fullstack + Supabase (Postgres + Storage + Auth). Toàn bộ app nằm sau đăng nhập, **riêng** nhóm route `/v/[token]` công khai.
-- **Nội dung (hybrid):** Report cho sếp + Hướng dẫn = HTML tự do (render iframe sandbox). Test Cases + Bug + Nhật ký = dữ liệu có cấu trúc render bằng React.
+- **Nội dung (2 họ):** *Tài liệu* = Report cho sếp (HTML tự do, iframe). *Có cấu trúc* = Hướng dẫn + Test Cases + Bug + Nhật ký (dữ liệu record render bằng React trong template/theme).
+- **Sửa inline + optimistic (1 owner):** trang có-cấu-trúc cho sửa tại chỗ; thêm/xoá record; lưu ngầm. KHÔNG live-sync nhiều thiết bị ở giai đoạn này.
+- **Sinh trang tương tác = Hướng ① (template-slot + data):** template = bộ khung/định dạng có vùng slot; record = dữ liệu đổ vào. KHÔNG parse HTML tùy ý (Hướng ②), KHÔNG dùng LLM.
+- **Thư viện template:** mọi trang lưu được nội dung/định dạng hiện tại thành template (đặt tên) → chọn lại cho trang cùng loại ở project khác.
 - **Chia sẻ (link bí mật, không đăng nhập):** mỗi trang sinh token ngẫu nhiên; tùy chọn mật khẩu / hết hạn / thu hồi. Ai có link là xem được đúng trang đó.
 - **Vai trò = nhãn phân loại người nhận** (colleague/manager/boss), **không** thay đổi quyền. Chỉ owner có tài khoản đăng nhập.
-- **Song ngữ:** chỉ Report cho sếp + Hướng dẫn có VI/EN toggle. TC/Bug/Nhật ký chỉ tiếng Việt. **Mặc định hiển thị tiếng Việt.**
-- **Test Cases & Bug = bảng sống:** có trạng thái cập nhật được + thống kê + lọc.
+- **Song ngữ:** Report cho sếp = song ngữ VI/EN (HTML). Trang có-cấu-trúc = **chỉ VI ở v1** (Hướng dẫn song ngữ = để ngỏ). **Mặc định hiển thị tiếng Việt.**
+- **Test Cases & Bug = bảng sống:** trạng thái cập nhật được + thống kê + lọc; sửa inline.
 - **Nhật ký = hybrid:** chủ yếu nhập tay, có thể tham chiếu commit; **gom theo từng feature**.
 - **Dev environment:** chạy hoàn toàn trong Docker; Node/Next.js/deps trong container, **không cài lên máy**. Supabase = cloud free-tier.
 
@@ -43,9 +63,18 @@ project               id, name, slug, client, description, status, cover_url, cr
 feature               id, project_id, name, description,
                       status(planned|in_progress|done|blocked), order
 page                  id, project_id, kind, title, published, updated_at,
-                      html_vi, html_en              -- chỉ dùng cho kind tự do
+                      html_vi, html_en,             -- chỉ dùng cho họ tài liệu (exec_report)
+                      template_id?                  -- template/theme đang áp dụng (FK -> template)
                       kind ∈ {exec_report, user_guide, test_cases, bugs, changelog}
                       -- mỗi project có đúng 5 dòng page (1/kind)
+template              id, name, target_kind,        -- template tái dùng cho 1 loại trang
+                      type(document|theme),         -- document: lưu html; theme: lưu config
+                      html?,                         -- với type=document (Report)
+                      config(jsonb)?,                -- với type=theme (màu/layout/cột hiển thị)
+                      created_at
+guide_block           id, project_id, "order",      -- 1 block của trang Hướng dẫn
+                      title, body, system_label,    -- nhãn hệ thống (vd "Odoo · Employees")
+                      images(jsonb: mảng path)
 test_case             id, project_id, feature_id?, section, code(TC-xx),
                       type(Positive|Boundary|Business|Negative),
                       summary, precondition, steps(jsonb), expected,
@@ -64,7 +93,9 @@ share_link            id, page_id, token(unique), label(colleague|manager|boss),
 ```
 
 - **Ảnh:** Supabase Storage bucket `evidence`, path `projectId/kind/entityId/...`. DB chỉ lưu **path**; viewer công khai nhận **signed URL** sinh ở server.
-- **Bilingual:** chỉ `page.html_vi` + `page.html_en` cho `exec_report`/`user_guide`.
+- **Bilingual:** chỉ `page.html_vi` + `page.html_en` cho `exec_report` (Report). Trang có-cấu-trúc chỉ VI ở v1.
+- **Template tái dùng:** "Lưu thành template" → tạo dòng `template` (document=html của Report; theme=config cho trang có-cấu-trúc). "Áp template" → set `page.template_id` (+ copy html nếu là document).
+- **Inline edit:** mỗi field/record sửa tại chỗ qua server action nhỏ + optimistic UI (React `useOptimistic`); thêm record = insert 1 dòng (test_case/bug/guide_block/changelog_entry); record cũ không đổi.
 - **RLS:** mọi bảng khóa cho owner. Viewer công khai không đọc trực tiếp DB (đọc qua server — mục 6).
 
 ## 5. Cấu trúc route
@@ -74,11 +105,12 @@ share_link            id, page_id, token(unique), label(colleague|manager|boss),
 /login
 /                              dashboard: danh sách project
 /projects/[id]                 tổng quan: 5 tab page + danh sách feature
-/projects/[id]/report          editor HTML (VI/EN) + preview
-/projects/[id]/guide           editor HTML (VI/EN)
-/projects/[id]/test-cases      bảng sống: lọc, đếm pass/fail, sửa
-/projects/[id]/bugs            bảng → modal chi tiết → gallery evidence
-/projects/[id]/changelog       timeline theo feature
+/projects/[id]/report          editor HTML (VI/EN) + preview + lưu/chọn template
+/projects/[id]/guide           các block hướng dẫn, sửa inline + thêm/xoá
+/projects/[id]/test-cases      bảng sống: lọc, đếm pass/fail, sửa inline + thêm TC
+/projects/[id]/bugs            bảng → modal chi tiết → gallery evidence, sửa inline
+/projects/[id]/changelog       timeline theo feature, sửa inline + thêm entry
+/projects/[id]/templates       thư viện template (lưu/chọn cho từng loại trang)
 /projects/[id]/shares          tạo/thu hồi link, đặt mật khẩu/hạn
 ```
 
@@ -133,19 +165,25 @@ volumes:
 - Tùy chọn sau: Supabase local (`supabase start`) để offline hoàn toàn — nặng, hoãn.
 - **Production / deploy** (gửi link ra ngoài): quyết ở bước triển khai (deploy container hoặc Vercel + Supabase). Chưa quyết.
 
-## 9. Template từng trang
+## 9. Template & render từng trang
 
 Design system dùng chung (Inter, navy/teal/gold, card, branding TechNext) tách thành theme React + CSS.
 
+**Mô hình chung cho họ có-cấu-trúc (Hướng ①):**
+- **Template/theme** = bộ khung tĩnh (header, tiêu đề cột, màu, "khuôn 1 record") + vùng **slot** "danh sách record nằm ở đây".
+- **Render**: lấy record từ DB → vẽ mỗi record bằng khuôn của template trong slot.
+- **Inline edit**: bấm field → sửa tại chỗ (optimistic) → server action lưu. Nút **+ Thêm record** (record cũ giữ nguyên). Định dạng nhất quán vì mọi record dùng chung khuôn.
+- **Lưu template**: lưu config theme hiện tại thành `template` để chọn lại cho project khác.
+
 | Trang | Render | Đặc điểm |
 |---|---|---|
-| Report cho sếp | HTML self-contained trong **iframe sandbox** | Giữ mermaid + toggle VI/EN + script. Editor + preview |
-| Hướng dẫn | iframe sandbox HTML | Song ngữ, ảnh nhúng |
-| Test Cases | React từ DB | Header thống kê (vd `42/50 pass · 3 fail`), chip type, badge Pass/Fail/Chưa chạy, lọc theo section/type/trạng thái, thumbnail → lightbox |
-| Bug Tickets | React từ DB | Bảng → modal chi tiết (severity S1–S4, priority P1–P4, expected/observed, suggested fix) → **Step Evidence gallery** + lightbox |
-| Nhật ký | React từ DB | Timeline gom theo Feature; entry theo ngày, chip trạng thái, ảnh, link commit |
+| Report cho sếp | HTML self-contained trong **iframe sandbox** | Họ tài liệu: editor HTML + preview, mermaid + toggle VI/EN, lưu HTML thành document template |
+| Hướng dẫn | React từ `guide_block` trong theme | Inline: thêm/sửa/xoá block (title+body+ảnh+nhãn hệ thống), kéo thả thứ tự |
+| Test Cases | React từ `test_case` trong theme | Header thống kê (`42/50 pass · 3 fail`), chip type, badge Pass/Fail; sửa inline; lọc; thumbnail → lightbox; + Thêm TC |
+| Bug Tickets | React từ `bug` trong theme | Bảng → modal chi tiết (S1–S4, P1–P4, expected/observed, suggested fix) → Step Evidence gallery; sửa inline; + Thêm bug |
+| Nhật ký | React từ `changelog_entry` trong theme | Timeline gom theo Feature; chip trạng thái, ảnh, link commit; sửa inline; + Thêm entry |
 
-Trang `/v/[token]` = đúng template tương ứng nhưng **read-only**, không nav, không sửa.
+Trang `/v/[token]` = đúng template tương ứng nhưng **read-only**, không nav, không sửa, không nút thêm.
 
 ## 10. Ngoài phạm vi (giai đoạn này)
 
@@ -153,3 +191,6 @@ Trang `/v/[token]` = đúng template tương ứng nhưng **read-only**, không 
 - Auto-sync nhật ký từ git (chỉ tham chiếu commit thủ công).
 - Supabase local / offline.
 - Quyết định hạ tầng production.
+- **Live-sync nhiều thiết bị/đa người** (chỉ optimistic inline 1 owner).
+- **Song ngữ cho trang có-cấu-trúc** (chỉ Report song ngữ; Hướng dẫn/TC/Bug/Nhật ký = VI ở v1).
+- **Parse HTML tùy ý → block (Hướng ②)** và chuyển đổi bằng LLM (Hướng ③).
